@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ProductController;
 use Grazulex\ApiRoute\Facades\ApiRoute;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,7 @@ ApiRoute::version('v1', function () {
     Route::middleware('throttle:auth')->group(function () {
         Route::post('register', [AuthController::class, 'register'])->name('api.v1.register');
         Route::post('login', [AuthController::class, 'login'])->name('api.v1.login');
+        Route::apiResource('products', ProductController::class);
     });
 
     // Protected routes with authenticated rate limiter (120/min)

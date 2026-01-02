@@ -19,6 +19,35 @@ trait ApiResponse
         ], $code);
     }
 
+    protected function paginated(
+        mixed $data,
+        mixed $paginator,
+        string $message = 'Success',
+        int $code = Response::HTTP_OK
+    ): JsonResponse {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+            'pagination' => [
+                'total' => $paginator->total(),
+                'count' => $paginator->count(),
+                'per_page' => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'total_pages' => $paginator->lastPage(),
+                'has_next' => $paginator->hasMorePages(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
+            ],
+            'links' => [
+                'first' => $paginator->url(1),
+                'last' => $paginator->url($paginator->lastPage()),
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
+            ],
+        ], $code);
+    }
+
     protected function created(
         mixed $data = null,
         string $message = 'Resource created successfully'
