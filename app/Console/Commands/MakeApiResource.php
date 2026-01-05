@@ -27,9 +27,10 @@ class MakeApiResource extends Command
      */
     public function handle(): int
     {
-        $name = $this->argument('name');
+        $name = Str::studly($this->argument('name'));
         $version = $this->option('api-version');
         $versionPath = "V{$version}";
+        $namePath = "{$name}/{$name}";
 
         $this->info("🚀 Creating API resource: {$name} (Version {$version})");
         $this->newLine();
@@ -49,14 +50,14 @@ class MakeApiResource extends Command
             if (!empty($modelFlags)) {
                 $flags = '-' . implode('', $modelFlags);
                 $commands[] = [
-                    'command' => "make:model {$name} {$flags}",
+                    'command' => "make:model {$namePath} {$flags}",
                     'description' => 'Model' . 
                         (!$this->option('skip-migration') ? ' + Migration' : '') . 
                         (!$this->option('skip-factory') ? ' + Factory' : ''),
                 ];
             } else {
                 $commands[] = [
-                    'command' => "make:model {$name}",
+                    'command' => "make:model {$namePath}",
                     'description' => 'Model',
                 ];
             }
@@ -65,7 +66,7 @@ class MakeApiResource extends Command
         // 2. API Controller
         if (!$this->option('skip-controller')) {
             $commands[] = [
-                'command' => "make:controller Api/{$versionPath}/{$name}Controller --api",
+                'command' => "make:controller Api/{$versionPath}/{$name}/{$name}Controller --api",
                 'description' => 'API Controller',
             ];
         }
@@ -73,11 +74,11 @@ class MakeApiResource extends Command
         // 3. Form Requests
         if (!$this->option('skip-requests')) {
             $commands[] = [
-                'command' => "make:request Api/{$versionPath}/Store{$name}Request",
+                'command' => "make:request Api/{$versionPath}/{$name}/Store{$name}Request",
                 'description' => 'Store Request',
             ];
             $commands[] = [
-                'command' => "make:request Api/{$versionPath}/Update{$name}Request",
+                'command' => "make:request Api/{$versionPath}/{$name}/Update{$name}Request",
                 'description' => 'Update Request',
             ];
         }
@@ -85,11 +86,11 @@ class MakeApiResource extends Command
         // 4. API Resources
         if (!$this->option('skip-resources')) {
             $commands[] = [
-                'command' => "make:resource {$name}Resource",
+                'command' => "make:resource {$name}/{$name}Resource",
                 'description' => 'API Resource',
             ];
             $commands[] = [
-                'command' => "make:resource {$name}Collection",
+                'command' => "make:resource {$name}/{$name}Collection",
                 'description' => 'API Collection',
             ];
         }
@@ -97,7 +98,7 @@ class MakeApiResource extends Command
         // 5. Feature Test
         if (!$this->option('skip-test')) {
             $commands[] = [
-                'command' => "make:test Api/{$versionPath}/{$name}Test --pest",
+                'command' => "make:test Api/{$versionPath}/{$name}/{$name}Test --pest",
                 'description' => 'Pest Test',
             ];
         }
@@ -105,7 +106,7 @@ class MakeApiResource extends Command
         // 6. Seeder
         if (!$this->option('skip-seeder')) {
             $commands[] = [
-                'command' => "make:seeder {$name}Seeder",
+                'command' => "make:seeder {$name}/{$name}Seeder",
                 'description' => 'Seeder',
             ];
         }
@@ -130,8 +131,8 @@ class MakeApiResource extends Command
         $this->comment('💡 Next steps:');
         $this->line("  1. Define migration fields in: database/migrations/*_create_{$this->pluralize($name)}_table.php");
         $this->line("  2. Add routes in: routes/api.php");
-        $this->line("  3. Implement controller logic in: app/Http/Controllers/Api/{$versionPath}/{$name}Controller.php");
-        $this->line("  4. Configure validation in: app/Http/Requests/Api/{$versionPath}/Store{$name}Request.php");
+        $this->line("  3. Implement controller logic in: app/Http/Controllers/Api/{$versionPath}/{$name}/{$name}Controller.php");
+        $this->line("  4. Configure validation in: app/Http/Requests/Api/{$versionPath}/{$name}/Store{$name}Request.php");
         $this->line("  5. Run: php artisan migrate");
 
         return Command::SUCCESS;
@@ -142,6 +143,8 @@ class MakeApiResource extends Command
      */
     private function pluralize(string $name): string
     {
-        return Str::snake(Str::pluralStudly($name));
+        $baseName = Str::studly(class_basename(str_replace(['/', '\\'], '\\', $name)));
+
+        return Str::snake(Str::pluralStudly($baseName));
     }
 }
