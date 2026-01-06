@@ -5,6 +5,28 @@ declare(strict_types=1);
 return [
     /*
     |--------------------------------------------------------------------------
+    | API Versions
+    |--------------------------------------------------------------------------
+    |
+    | Define your API versions here. Each version has its own route file,
+    | middleware, and lifecycle status.
+    |
+    */
+    'versions' => [
+        'v1' => [
+            'routes' => base_path('routes/api/v1.php'),
+            'middleware' => [],
+            'status' => 'active',
+            'deprecated_at' => null,
+            'sunset_at' => null,
+            'successor' => null,
+            'documentation' => null,
+            'rate_limit' => null,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Detection Strategy
     |--------------------------------------------------------------------------
     |

@@ -230,7 +230,9 @@ laravel-api-kit/
 │   ├── sanctum.php                        # Token auth config
 │   └── scramble.php                       # API docs config
 ├── routes/
-│   └── api.php                            # API routes with versioning
+│   ├── api.php                            # API routes entry point
+│   └── api/
+│       └── v1.php                         # Version 1 routes
 ├── tests/
 │   └── Feature/Api/V1/
 │       └── AuthTest.php                   # Authentication tests
@@ -241,7 +243,7 @@ laravel-api-kit/
 
 ## API Versioning
 
-This kit uses [grazulex/laravel-apiroute](https://github.com/Grazulex/laravel-apiroute) for API versioning with support for:
+This kit uses [grazulex/laravel-apiroute](https://github.com/Grazulex/laravel-apiroute) v2.x for API versioning with support for:
 
 - **URI Path** (default): `/api/v1/users`, `/api/v2/users`
 - **Header**: `X-API-Version: 2`
@@ -252,22 +254,34 @@ This kit uses [grazulex/laravel-apiroute](https://github.com/Grazulex/laravel-ap
 
 1. Create controllers in `app/Http/Controllers/Api/V2/`
 2. Create requests in `app/Http/Requests/Api/V2/`
-3. Update `routes/api.php`:
+3. Create route file `routes/api/v2.php`:
 
 ```php
-use Grazulex\ApiRoute\Facades\ApiRoute;
+<?php
 
-// Version 2 - New current version
-ApiRoute::version('v2', function () {
-    Route::post('register', [V2\AuthController::class, 'register']);
-    // ... more routes
-})->current();
+use App\Http\Controllers\Api\V2\AuthController;
+use Illuminate\Support\Facades\Route;
 
-// Version 1 - Mark as deprecated
-ApiRoute::version('v1', function () {
-    Route::post('register', [V1\AuthController::class, 'register']);
-    // ... existing routes
-})->deprecated('2025-06-01')->sunset('2025-12-01');
+Route::post('register', [AuthController::class, 'register']);
+// ... more routes
+```
+
+4. Update `config/apiroute.php`:
+
+```php
+'versions' => [
+    'v1' => [
+        'routes' => base_path('routes/api/v1.php'),
+        'status' => 'deprecated',
+        'deprecated_at' => '2025-06-01',
+        'sunset_at' => '2025-12-01',
+        'successor' => 'v2',
+    ],
+    'v2' => [
+        'routes' => base_path('routes/api/v2.php'),
+        'status' => 'active',
+    ],
+],
 ```
 
 ### Deprecation Headers
@@ -275,8 +289,8 @@ ApiRoute::version('v1', function () {
 When accessing deprecated versions, responses include RFC-compliant headers:
 
 ```http
-Deprecation: @1717200000
-Sunset: Sun, 01 Dec 2025 00:00:00 GMT
+Deprecation: Sun, 01 Jun 2025 00:00:00 GMT
+Sunset: Mon, 01 Dec 2025 00:00:00 GMT
 Link: </api/v2>; rel="successor-version"
 ```
 
@@ -574,14 +588,11 @@ class PostResource extends JsonResource
 
 4. **Add Routes:**
 ```php
-// routes/api.php
-ApiRoute::version('v1', function () {
+// routes/api/v1.php
+Route::middleware('auth:sanctum')->group(function () {
     // ... existing routes
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::apiResource('posts', PostController::class);
-    });
-})->current();
+    Route::apiResource('posts', PostController::class);
+});
 ```
 
 5. **Create Tests:**
